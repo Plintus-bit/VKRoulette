@@ -15,5 +15,6 @@ class TextSeparator:
     @staticmethod
     def IsContainText(text: str,
                       need_to_contain: str):
-        template = r'' + need_to_contain
+        text = text.lower()
+        template = r'' + need_to_contain.lower()
         return search(template, text) is not None

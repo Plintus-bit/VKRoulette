@@ -12,7 +12,7 @@ class RuleData:
     def __init__(self,
                  rule_type: RuleType,
                  activity_type: AC = AC.DEFAULT,
-                 consider_type: CC = CC.DEFAULT,
+                 consider_type: CC = CC.BASIC_COMMENT_ONLY,
                  msg_data: str = ""):
         self.rule_type = rule_type
         self.activity_type = activity_type

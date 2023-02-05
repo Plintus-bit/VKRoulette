@@ -2,6 +2,7 @@ import re
 from random import randint
 
 from parsers.cond_enums.activity_cond import AC
+from parsers.cond_enums.consider_cond import CC
 from parsers.cond_enums.rule_types import RuleType
 from parsers.rules.rule import Rule
 from parsers.rules.rule_data import RuleData
@@ -11,13 +12,15 @@ from parsers.vk_requests import VKRequests
 
 
 class VKRoulette:
-    WHO_PLAY = "Участвуют: "
-    WHO_WIN = "Победитель: "
-    WINNER_PLACES = "Победитель №"
+    WHO_PLAY = "------Участвуют: "
+    WHO_WIN = "------Победитель: "
+    PLAYER = "Участник: "
+    CHANCE = "--Шансы на победу: "
+    WINNER_PLACES = "------Победитель №"
     VK_REQ = VKRequests()
 
     @staticmethod
-    def WhoWin(players: list[str], win_places: int = 1):
+    def WhoWin(players: dict, win_places: int = 1):
         print()
         winners = []
         for i in range(win_places):
@@ -26,11 +29,12 @@ class VKRoulette:
             players.pop(winner_index)
         winners_name = VKRoulette.GetPlayersName(winners)
         if win_places <= 1:
-            print(VKRoulette.WHO_WIN + winners_name[0])
+            print(VKRoulette.WHO_WIN + winners_name[0][TextTags.NAME])
         else:
             winners_count = min([win_places, len(players)])
             for winner_place in range(winners_count):
-                print(VKRoulette.WINNER_PLACES, winner_place + 1, ": ", winners_name[winner_place])
+                print(VKRoulette.WINNER_PLACES, winner_place + 1, ": ",
+                      winners_name[winner_place][TextTags.NAME])
 
     @staticmethod
     def GetExceptionsPlayers(exception_players: list[str]):
@@ -44,22 +48,28 @@ class VKRoulette:
         return result_exc
 
     @staticmethod
-    def WhoPlay(players: list[str]):
+    def WhoPlay(players: dict):
         print(VKRoulette.WHO_PLAY)
         players_name = VKRoulette.GetPlayersName(players)
         for player_name in players_name:
-            print(player_name)
+            print(VKRoulette.PLAYER + player_name[TextTags.NAME])
+            print(VKRoulette.CHANCE + player_name[TextTags.CHANCE])
+            print()
 
     @staticmethod
-    def GetPlayersName(players_id: list):
+    def GetPlayersName(players_id: list) -> list:
         names_separator = " "
-        players_name = []
+        players = []
         players_data = VKRoulette.VK_REQ.GetUsers(players_id)
         for player_data in players_data:
-            players_name.append(player_data[TextTags.FIRST_NAME]
-                                + names_separator
-                                + player_data[TextTags.LAST_NAME])
-        return players_name
+            player = dict()
+            player[TextTags.NAME] = player_data[TextTags.FIRST_NAME]\
+                                    + names_separator\
+                                    + player_data[TextTags.LAST_NAME]
+            chance = players_id.count(player_data[TextTags.ID])
+            player[TextTags.CHANCE] = str(chance)
+            players.append(player)
+        return players
     # ----------------- САМ РОЗЫГРЫШ ПО УСЛОВИЯМ --------------------
 
     @staticmethod
@@ -73,21 +83,24 @@ class VKRoulette:
         if exceptions is not None:
             players_exceptions = VKRoulette.GetExceptionsPlayers(exceptions)
             for player_exc in players_exceptions:
-                if player_exc in players:
+                while player_exc in players:
                     players.remove(player_exc)
         VKRoulette.WhoPlay(players)
         VKRoulette.WhoWin(players)
+        # print(VKRoulette.VK_REQ.GetComments(-204044583, 1111))
+        # print(VKRoulette.VK_REQ.GetComments(-204044583, 1111, 1115))
 
 
 VKRoulette.Roulette(
     rules=[
         Rule(
             rule_data=RuleData(
-                RuleType.COMMENT,
-                AC.ONE_COMMENT,
+                rule_type=RuleType.COMMENT,
+                activity_type=AC.MANY_COMMENTS,
+                consider_type=CC.ALL_COMMENTS
             ).GetRuleData(),
             links=[
-                "https://vk.com/wall-204044583_1024"
+                "https://vk.com/wall-204044583_1054"
             ]),
     ],
     exceptions=[

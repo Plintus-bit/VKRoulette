@@ -21,8 +21,10 @@ class VKRequests:
     def GetLikes(self, owner_id: int, post_id: int):
         return self.api.wall.getLikes(owner_id=owner_id, post_id=post_id)
 
-    def GetComments(self, owner_id: int, post_id: int):
-        return self.api.wall.getComments(owner_id=owner_id, post_id=post_id, fields="id")
+    def GetComments(self, owner_id: int, post_id: int, comment_id: int = -1):
+        if comment_id < 0:
+            return self.api.wall.getComments(owner_id=owner_id, post_id=post_id)
+        return self.api.wall.getComments(owner_id=owner_id, post_id=post_id, comment_id=comment_id)
 
     def GetUsers(self, user_ids):
         users = ""
