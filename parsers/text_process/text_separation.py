@@ -18,3 +18,14 @@ class TextSeparator:
         text = text.lower()
         template = r'' + need_to_contain.lower()
         return search(template, text) is not None
+
+    @staticmethod
+    def IsContainNumeric(text: str):
+        template = r'[0-9-]*'
+        return search(template, text) is not None
+
+    @staticmethod
+    def GetNumericData(text: str):
+        template = r'[0-9-]*'
+        return int(search(template, text).group(0))
+

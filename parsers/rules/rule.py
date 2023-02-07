@@ -3,7 +3,7 @@ from re import Match
 
 from parsers.cond_enums.activity_cond import AC
 from parsers.cond_enums.consider_cond import CC
-from parsers.cond_enums.rule_types import RuleType
+from parsers.cond_enums.rule_type import RuleType
 from parsers.rules.rule_data import RuleData
 from parsers.text_process.text_separation import TextSeparator
 from parsers.text_process.text_tags import TextTags
@@ -23,11 +23,6 @@ class Rule:
 
     def SetVKReq(self, vk_req: VKRequests):
         self.__vk_req = vk_req
-
-    @staticmethod
-    def GetRequestData(link: str):
-        link_data = TextSeparator.GetLinkData(link)
-        return link_data
 
     def ParsePlayersData(self, link_data: Match[str]):
         # должен вернуть игроков
@@ -102,7 +97,7 @@ class Rule:
             players = []
         links = self.GetLinks()
         for link in links:
-            part_players = self.ParsePlayersData(Rule.GetRequestData(link))
+            part_players = self.ParsePlayersData(TextSeparator.GetLinkData(link))
             if len(players) == 0:
                 players = part_players
             else:

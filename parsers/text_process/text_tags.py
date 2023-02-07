@@ -1,4 +1,5 @@
 class TextTags:
+    USER_ID = "user_id"
     USERS = "users"
     ITEMS = "items"
     TEXT = "text"
@@ -9,8 +10,10 @@ class TextTags:
     LAST_NAME = "last_name"
     THREAD = "thread"
     COUNT = "count"
+    CONTACTS = "contacts"
 
     # нет в ВК апи
     NAME = "name"
     CHANCE = "chance"
+    NUMERIC = "numeric"
 

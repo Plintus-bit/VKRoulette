@@ -1,9 +1,10 @@
-from parsers.cond_enums.rule_types import RuleType
+from parsers.cond_enums.rule_type import RuleType
 from parsers.cond_enums.consider_cond import CC
 from parsers.cond_enums.activity_cond import AC
+from parsers.rules.data import Data
 
 
-class RuleData:
+class RuleData(Data):
     RULE_TYPE = "rule_type"
     ACTIVITY = "activity"
     CONSIDER = "consider"
@@ -19,7 +20,7 @@ class RuleData:
         self.consider_type = consider_type
         self.msg_data = msg_data
 
-    def GetRuleData(self) -> dict:
+    def GetData(self) -> dict:
         rule_data = dict()
         rule_data[RuleData.RULE_TYPE] = self.rule_type
         rule_data[RuleData.ACTIVITY] = self.activity_type

@@ -15,6 +15,14 @@ class VKRequests:
         self.api = vk.API(access_token=VKRequests.TOKEN,
                           v=VKRequests.VERSION)
 
+    @staticmethod
+    def __MergeData(data: list):
+        res_data = ""
+        separator = ","
+        for r_data in data:
+            res_data += str(r_data) + separator
+        return res_data[:len(res_data) - 1]
+
     def GetReposts(self, owner_id: int, post_id: int):
         return self.api.wall.getReposts(owner_id=owner_id, post_id=post_id)
 
@@ -26,10 +34,9 @@ class VKRequests:
             return self.api.wall.getComments(owner_id=owner_id, post_id=post_id)
         return self.api.wall.getComments(owner_id=owner_id, post_id=post_id, comment_id=comment_id)
 
-    def GetUsers(self, user_ids):
-        users = ""
-        separator = ","
-        for user_id in user_ids:
-            users += str(user_id) + separator
-        users = users[:len(users) - 1]
-        return self.api.users.get(user_ids=users)
+    def GetUsers(self, user_ids: list):
+        return self.api.users.get(user_ids=self.__MergeData(user_ids))
+
+    def GetGroupContacts(self, group_ids: list):
+        return self.api.groups.getById(group_id=self.__MergeData(group_ids),
+                                       fields="contacts")
