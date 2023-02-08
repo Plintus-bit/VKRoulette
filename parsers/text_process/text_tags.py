@@ -11,9 +11,12 @@ class TextTags:
     THREAD = "thread"
     COUNT = "count"
     CONTACTS = "contacts"
+    MEMBER = "member"
+    PROFILES = "profiles"
 
     # нет в ВК апи
     NAME = "name"
     CHANCE = "chance"
-    NUMERIC = "numeric"
+    DATA = "data"
+    EMOJI_COUNTS = "emoji_counts"
 

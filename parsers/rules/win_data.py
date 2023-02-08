@@ -7,7 +7,7 @@ class WinData(Data):
     WIN_COUNT = "count"
 
     def __init__(self,
-                 win_type: WinType = WinType.DEFAULT,
+                 win_type: WinType = WinType.PLAYER,
                  win_count: int = 1):
         self.win_count = win_count
         self.win_type = win_type

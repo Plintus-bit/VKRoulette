@@ -3,6 +3,7 @@ from re import Match
 
 from parsers.cond_enums.activity_cond import AC
 from parsers.cond_enums.consider_cond import CC
+from parsers.cond_enums.rule_priority import RulePriority
 from parsers.cond_enums.rule_type import RuleType
 from parsers.rules.rule_data import RuleData
 from parsers.text_process.text_separation import TextSeparator
@@ -24,8 +25,9 @@ class Rule:
     def SetVKReq(self, vk_req: VKRequests):
         self.__vk_req = vk_req
 
-    def ParsePlayersData(self, link_data: Match[str]):
+    def ParsePlayersData(self, link):
         # должен вернуть игроков
+        link_data = TextSeparator.GetLinkData(link)
         if self.__rule_data[RuleData.RULE_TYPE] == RuleType.LIKE:
             return self.ParseLikesData(link_data)
 
@@ -34,6 +36,10 @@ class Rule:
 
         if self.__rule_data[RuleData.RULE_TYPE] == RuleType.COMMENT:
             return self.ParseCommentsData(link_data)
+
+        if self.__rule_data[RuleData.RULE_TYPE] == RuleType.SUBSCRIBE:
+            link_data = TextSeparator.GetGroupNameOrId(link)
+            return self.ParseSubscribesData(link_data)
 
     def ParseLikesData(self, link_data: Match[str]):
         players = []
@@ -48,7 +54,7 @@ class Rule:
         players = []
         players_data = self.__vk_req.GetReposts(
             link_data.group(1),
-            link_data.group(2))[TextTags.ITEMS]
+            link_data.group(2))
         for player_data in players_data:
             players.append(player_data[TextTags.FROM_ID])
         return players
@@ -56,7 +62,7 @@ class Rule:
     def ParseCommentsData(self, link_data: Match[str]):
         players_data = self.__vk_req.GetComments(
             link_data.group(1),
-            link_data.group(2))[TextTags.ITEMS]
+            link_data.group(2))
         players = self.ParseComments(players_data, [])
 
         if self.__rule_data[RuleData.CONSIDER] == CC.ALL_COMMENTS:
@@ -65,10 +71,14 @@ class Rule:
                     temp_data = self.__vk_req.GetComments(
                         link_data.group(1),
                         link_data.group(2),
-                        player_data[TextTags.ID]
-                    )[TextTags.ITEMS]
+                        comment_id=player_data[TextTags.ID]
+                    )
                     players = self.ParseComments(temp_data, players)
         return players
+
+    def ParseSubscribesData(self,
+                            group: str):
+        return self.__vk_req.GetSubscribers(group_id=group)
 
     def ParseComments(self, players_data,
                       players: list):
@@ -84,6 +94,10 @@ class Rule:
                 if TextSeparator.IsContainText(str(player_data[TextTags.TEXT]),
                                                str(self.__rule_data[RuleData.MSG])):
                     players.append(player_data[TextTags.FROM_ID])
+        elif self.__rule_data[RuleData.ACTIVITY] == AC.EMOJI:
+            for player_data in players_data:
+                if TextSeparator.IsEmoji(str(player_data[TextTags.TEXT])):
+                    players.append(player_data[TextTags.FROM_ID])
         return players
 
     def GetLinks(self):
@@ -97,7 +111,7 @@ class Rule:
             players = []
         links = self.GetLinks()
         for link in links:
-            part_players = self.ParsePlayersData(TextSeparator.GetLinkData(link))
+            part_players = self.ParsePlayersData(link)
             if len(players) == 0:
                 players = part_players
             else:
@@ -109,7 +123,10 @@ class Rule:
         # now_play - выполнившие предыдующие условия
         # part_play - участвующие в данной части условия
         result_players = []
+        result_length = min(len(now_play), len(part_play))
         for player in now_play:
             if player in part_play:
                 result_players.append(player)
+                if len(result_players) == result_length:
+                    return result_players
         return result_players
