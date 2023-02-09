@@ -92,32 +92,44 @@ class VKRoulette:
                                                group_links,
                                                exceptions)
         VKRoulette.TryLuck(win, players)
-        # print(VKRoulette.VK_REQ.GetComments(-204044583, 1111, need_name=True))
 
+
+# VKRoulette.Roulette(
+#     rules=[
+#         Rule(
+#             rule_data=RuleData(
+#                 rule_type=RuleType.COMMENT,
+#                 activity_type=AC.EMOJI
+#             ).GetData(),
+#             links=[
+#                 "https://vk.com/wall-204044583_1143"
+#             ]),
+#         Rule(
+#             rule_data=RuleData(
+#                 rule_type=RuleType.SUBSCRIBE
+#             ).GetData(),
+#             links=[
+#                 "https://vk.com/camshel"
+#             ])
+#     ],
+#     win=Win(
+#         win_data=WinData(
+#             win_type=WinType.EMOJI_DATA,
+#             win_count=2
+#         ).GetData(),
+#         link="https://vk.com/wall-204044583_1143"
+#     )
+# )
 
 VKRoulette.Roulette(
     rules=[
         Rule(
             rule_data=RuleData(
-                rule_type=RuleType.COMMENT,
-                activity_type=AC.EMOJI
-            ).GetData(),
-            links=[
-                "https://vk.com/wall-204044583_1143"
-            ]),
-        Rule(
-            rule_data=RuleData(
                 rule_type=RuleType.SUBSCRIBE
             ).GetData(),
             links=[
+                "https://vk.com/alsushiiiii",
                 "https://vk.com/camshel"
             ])
-    ],
-    win=Win(
-        win_data=WinData(
-            win_type=WinType.EMOJI_DATA,
-            win_count=2
-        ).GetData(),
-        link="https://vk.com/wall-204044583_1143"
-    )
+    ]
 )

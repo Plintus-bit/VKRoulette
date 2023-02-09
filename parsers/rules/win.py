@@ -10,6 +10,7 @@ from parsers.vk_requests import VKRequests
 
 class Win:
     WHO_WIN = "------Победитель: "
+    ALL_PLAYERS = "------Всего участников: "
     NO_WINNERS = "Нет участников - нет победителей"
     WINNER_PLACES = "------Победитель №"
     WINNER_DATA = "Победный комментарий: "
@@ -23,12 +24,16 @@ class Win:
     def __init__(self,
                  win_data=None,
                  link: str = None,
-                 vk_req: VKRequests = None):
+                 vk_req: VKRequests = None,
+                 additional_params: AP = AP.SHOW_NAME):
         if win_data is None:
             win_data = WinData().GetData()
+        if additional_params is None:
+            additional_params = []
         self.__win_data = win_data
         self.__link = link
         self.__vk_req = vk_req
+        self.__ap = additional_params
 
     def SetVKReq(self, vk_req: VKRequests):
         self.__vk_req = vk_req
@@ -50,9 +55,13 @@ class Win:
 
     def WhoPlay(self,
                 players_data: list,
-                params=None):
+                real_count: int = None):
+        if real_count is None:
+            real_count = len(players_data)
+        print(Win.ALL_PLAYERS + str(len(players_data))
+              + " (" + str(real_count) + ")")
         print(Win.WHO_PLAY)
-        if params is None:
+        if self.__ap is None:
             if self.__win_data[WinData.WIN_TYPE] != WinType.PLAYER:
                 self.__ShowWithoutNames(players_data)
             else:
@@ -90,10 +99,12 @@ class Win:
 
     def GetWinnersNum(self,
                       players: list):
+        max_count = 1000
         players_data = DataRetrieval.GetPlayersNameAndNumeric(self.__vk_req,
                                                               players,
                                                               self.__link)
-        self.WhoPlay(players_data)
+        self.WhoPlay(players_data,
+                     len(players))
         winners = self.HolyRandom(players_data)
         winners_num = []
         for winner in winners:
@@ -107,7 +118,8 @@ class Win:
                                                            players,
                                                            self.__link,
                                                            self.__win_data[WinData.WIN_TYPE])
-        self.WhoPlay(players_data)
+        self.WhoPlay(players_data,
+                     len(players))
         winners = self.HolyRandom(players_data)
         winners_text = []
         for winner in winners:
@@ -118,7 +130,8 @@ class Win:
     def GetWinnersPlayer(self, players: list):
         players_data = DataRetrieval.GetPlayersNameAndChance(self.__vk_req,
                                                              players)
-        self.WhoPlay(players_data)
+        self.WhoPlay(players_data,
+                     len(players))
         return self.HolyRandom(players_data)
 
     def HolyRandom(self,

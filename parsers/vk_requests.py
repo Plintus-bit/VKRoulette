@@ -19,29 +19,40 @@ class VKRequests:
                           v=VKRequests.VERSION)
 
     @staticmethod
-    def __MergeData(data: list):
+    def __MergeData(data: list) -> list[str]:
+        result_data_array = []
         res_data = ""
         separator = ","
+        count = 0
+        full_count = 0
         for r_data in data:
             res_data += str(r_data) + separator
-        return res_data[:len(res_data) - 1]
+            count += 1
+            full_count += 1
+            if count == 1000 or full_count == len(data):
+                result_data_array.append(res_data[:len(res_data) - 1])
+                res_data = ""
+                count = 0
+        return result_data_array
 
     def GetReposts(self, owner_id: int, post_id: int):
-        divider = 1000
-        first = self.api.wall.getReposts(owner_id=owner_id, post_id=post_id)
-        data = first[TextTags.ITEMS]
-        count = first[TextTags.COUNT] // divider
-        for i in range(1, count+1):
-            data += self.api.wall.getReposts(owner_id=owner_id, post_id=post_id, offset=i*divider)[TextTags.ITEMS]
-        return data
+        return self.api.wall.getReposts(owner_id=owner_id, post_id=post_id)
 
     def GetLikes(self, owner_id: int, post_id: int):
+        VKRequests.__GoToSleep()
         divider = 1000
-        first = self.api.wall.getLikes(owner_id=owner_id, post_id=post_id)
-        data = first[TextTags.ITEMS]
+        first = self.api.wall.getLikes(owner_id=owner_id,
+                                       post_id=post_id,
+                                       count=divider,
+                                       offset=0)
+        data = first[TextTags.USERS]
         count = first[TextTags.COUNT] // divider
         for i in range(1, count + 1):
-            data += self.api.wall.getLikes(owner_id=owner_id, post_id=post_id, offset=i * divider)[TextTags.ITEMS]
+            VKRequests.__GoToSleep()
+            data += self.api.wall.getLikes(owner_id=owner_id,
+                                           post_id=post_id,
+                                           count=divider,
+                                           offset=i * divider)[TextTags.USERS]
         return data
 
     def GetComments(self,
@@ -50,12 +61,14 @@ class VKRequests:
                     need_name: bool = False,
                     comment_id: int = -1):
         divider = 100
+        VKRequests.__GoToSleep()
         if need_name:
             if comment_id < 0:
                 first = self.api.wall.getComments(owner_id=owner_id,
                                                   post_id=post_id,
                                                   extended=1,
-                                                  fields="first_name,last_name")
+                                                  fields="first_name,last_name",
+                                                  count=divider)
                 data = first[TextTags.ITEMS]
                 data_2 = first[TextTags.PROFILES]
                 count = first[TextTags.COUNT] // divider
@@ -64,7 +77,8 @@ class VKRequests:
                                                      post_id=post_id,
                                                      extended=1,
                                                      fields="first_name,last_name",
-                                                     offset=i * divider)
+                                                     count=divider,
+                                                     offset=i * divider)[TextTags.ITEMS]
                     data += temp[TextTags.ITEMS]
                     data_2 += temp[TextTags.PROFILES]
                 return data, data_2
@@ -72,7 +86,8 @@ class VKRequests:
                                               post_id=post_id,
                                               extended=1,
                                               fields="first_name,last_name",
-                                              comment_id=comment_id)
+                                              comment_id=comment_id,
+                                              count=divider)
             data = first[TextTags.ITEMS]
             data_2 = first[TextTags.PROFILES]
             count = first[TextTags.COUNT] // divider
@@ -82,45 +97,72 @@ class VKRequests:
                                                  extended=1,
                                                  fields="first_name,last_name",
                                                  comment_id=comment_id,
-                                                 offset=i * divider)
+                                                 count=divider,
+                                                 offset=i * divider)[TextTags.ITEMS]
                 data += temp[TextTags.ITEMS]
                 data_2 += temp[TextTags.PROFILES]
             return data, data_2
         if comment_id < 0:
             first = self.api.wall.getComments(owner_id=owner_id,
-                                              post_id=post_id)
+                                              post_id=post_id,
+                                              count=divider)
             data = first[TextTags.ITEMS]
             count = first[TextTags.COUNT] // divider
             for i in range(1, count + 1):
                 data += self.api.wall.getComments(owner_id=owner_id,
                                                   post_id=post_id,
-                                                  offset=i * divider)
+                                                  offset=i * divider,
+                                                  count=divider)[TextTags.ITEMS]
             return data
         first = self.api.wall.getComments(owner_id=owner_id,
                                           post_id=post_id,
-                                          comment_id=comment_id)
+                                          comment_id=comment_id,
+                                          count=divider)
         data = first[TextTags.ITEMS]
         count = first[TextTags.COUNT] // divider
         for i in range(1, count + 1):
             data += self.api.wall.getComments(owner_id=owner_id,
                                               post_id=post_id,
                                               comment_id=comment_id,
+                                              count=divider,
                                               offset=i * divider)[TextTags.ITEMS]
+        return data
 
     def GetUsers(self, user_ids: list):
-        return self.api.users.get(user_ids=self.__MergeData(user_ids))
+        data = self.__MergeData(user_ids)
+        result_data: list = None
+        for item in data:
+            if result_data is None:
+                result_data = self.api.users.get(user_ids=item)
+            else:
+                result_data.extend(self.api.users.get(user_ids=item))
+            VKRequests.__GoToSleep()
+        return result_data
 
     def GetGroupContacts(self, group_ids: list):
-        return self.api.groups.getById(group_id=self.__MergeData(group_ids),
-                                       fields="contacts")[TextTags.CONTACTS]
+        data = self.__MergeData(group_ids)
+        result_data: list = None
+        for item in data:
+            if result_data is None:
+                result_data = self.api.groups.getById(group_id=item,
+                                                      fields="contacts")[TextTags.CONTACTS]
+            else:
+                result_data.extend(self.api.groups.getById(group_id=item,
+                                                           fields="contacts")[TextTags.CONTACTS])
+            VKRequests.__GoToSleep()
+        return result_data
 
     def GetSubscribers(self, group_id):
+        VKRequests.__GoToSleep()
         divider = 500
-        first = self.api.groups.getMembers(group_id=group_id)
+        first = self.api.groups.getMembers(group_id=group_id,
+                                           count=divider)
         data = first[TextTags.ITEMS]
         count = first[TextTags.COUNT] // divider
         for i in range(1, count + 1):
+            VKRequests.__GoToSleep()
             data += self.api.groups.getMembers(group_id=group_id,
+                                               count=divider,
                                                offset=i * divider)[TextTags.ITEMS]
         return data
 

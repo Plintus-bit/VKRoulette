@@ -45,9 +45,10 @@ class Rule:
         players = []
         players_data = self.__vk_req.GetLikes(
             link_data.group(1),
-            link_data.group(2))[TextTags.USERS]
+            link_data.group(2))
         for player_data in players_data:
-            players.append(player_data[TextTags.UID])
+            if player_data[TextTags.UID] not in players:
+                players.append(player_data[TextTags.UID])
         return players
 
     def ParseRepostsData(self, link_data: Match[str]):
@@ -56,7 +57,8 @@ class Rule:
             link_data.group(1),
             link_data.group(2))
         for player_data in players_data:
-            players.append(player_data[TextTags.FROM_ID])
+            if player_data[TextTags.FROM_ID] not in players:
+                players.append(player_data[TextTags.FROM_ID])
         return players
 
     def ParseCommentsData(self, link_data: Match[str]):
@@ -112,6 +114,7 @@ class Rule:
         links = self.GetLinks()
         for link in links:
             part_players = self.ParsePlayersData(link)
+            print(len(part_players))
             if len(players) == 0:
                 players = part_players
             else:
